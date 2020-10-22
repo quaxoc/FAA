@@ -7,6 +7,7 @@ Created on Thu Oct 22 16:58:41 2020
 
 import numpy as np
 from sklearn import preprocessing
+from datos import *
 
 dataset=Datos('ConjuntosDatos/tic-tac-toe.data')
 data_table=dataset.datos
