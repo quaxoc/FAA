@@ -87,6 +87,9 @@ def naive_bayes(dataset, train, test_line, laplace):
         p_priori.append(np.sum(train_classes==c)/len(train_classes))
     #print("Prior probabilities of classes:", p_priori)
     
+    
+    #Entrenamiento
+    
     #An array with tables for each attribute that either contains probabilities or mean and std for non categorical values
     prob_dada_clase=[]
     a_id=0
@@ -115,6 +118,9 @@ def naive_bayes(dataset, train, test_line, laplace):
         prob_dada_clase.append(p_table)
         a_id+=1
             
+        
+    #Clasifica 
+    
     
     #Probabilidad clase:
     #P(C|A1..An)=P(A1|C)..P(An|C)P(C)/P(A1).. P(An)
@@ -149,25 +155,21 @@ def naive_bayes(dataset, train, test_line, laplace):
     
 #dataset=Datos('ConjuntosDatos/tic-tac-toe.data')
 dataset=Datos('ConjuntosDatos/german.data')
+    
+laplace=True
 
 
+#Validación
 
 #Validation part
 rows_number=dataset.datos.shape[0]
-test_proportion=0.2
-
 
 
 #Simple validation
+test_proportion=0.3
 line_ids=validacion_simple(rows_number,test_proportion)
 line_ids_test=line_ids['Test']
 line_ids_train=line_ids['Train']
-
-
-
-
-    
-laplace=True
 
 train=dataset.extraeDatos(line_ids_train)
 test=dataset.extraeDatos(line_ids_test)
