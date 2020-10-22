@@ -150,15 +150,14 @@ def naive_bayes(dataset, train, test_line, laplace):
 #dataset=Datos('ConjuntosDatos/tic-tac-toe.data')
 dataset=Datos('ConjuntosDatos/german.data')
 
+
+
+#Validation part
 rows_number=dataset.datos.shape[0]
 test_proportion=0.2
 
-'''
-#Cruzada
-line_ids=validacion_cruzada(rows_number,4)
-line_ids_test=line_ids[0]['Test']
-line_ids_train=line_ids[0]['Train']
-'''
+
+
 #Simple validation
 line_ids=validacion_simple(rows_number,test_proportion)
 line_ids_test=line_ids['Test']
@@ -169,8 +168,6 @@ line_ids_train=line_ids['Train']
 
     
 laplace=True
-#test_line=["A14",24,"A32","A43",3430,"A63","A75",3,"A93","A101",2,"A123",31,"A143","A152",1,"A173",2,"A192","A201"]
-#test_line=["x","x","x","o","b","x","b","o","o"]
 
 train=dataset.extraeDatos(line_ids_train)
 test=dataset.extraeDatos(line_ids_test)
@@ -180,5 +177,23 @@ for test_line in test:
     class_name, P_classes = naive_bayes(dataset, train, test_line[0:-1], laplace)
     if class_name == test_line[-1]:
         counter+=1
-    print("Predicted class: ", class_name, "Real class",test_line[-1], "Probabilities for classes: ", P_classes)
-print("Assert:", counter/len(test))
+assert_simple=counter/len(test)
+print("Simple validation assert:", assert_simple)
+
+
+#Cross validation
+partitions=4
+line_ids=validacion_cruzada(rows_number,partitions)
+assert_cross=[]
+for i in range(partitions):
+    line_ids_test=line_ids[i]['Test']
+    line_ids_train=line_ids[i]['Train']
+    train=dataset.extraeDatos(line_ids_train)
+    test=dataset.extraeDatos(line_ids_test)
+    counter=0
+    for test_line in test:
+        class_name, P_classes = naive_bayes(dataset, train, test_line[0:-1], laplace)
+        if class_name == test_line[-1]:
+            counter+=1
+    assert_cross.append(counter/len(test))
+print("Cross validation assert:", assert_cross)
