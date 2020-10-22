@@ -6,12 +6,59 @@ Created on Sat Oct  3 18:36:33 2020
 """
 
 from datos import *
-from test_train import *
 import pandas as pd
 import numpy as np
+import random 
 from scipy.stats import norm
 
 '''
+Test - train module functions: split, validacion_simple, validacion_cruzada
+'''
+def split(a, n):
+    k, m = divmod(len(a), n)
+    return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
+
+def validacion_simple(row_count,test_proportion):
+    id_list=list(range(row_count))
+    random.shuffle(id_list)
+    cut=round(test_proportion*row_count)
+    sampling_test=sorted(id_list[0:cut])
+    sampling_train = sorted(id_list[cut:])
+    sampling={"Test":sampling_test,
+              "Train":sampling_train}
+    return(sampling)
+    #print(sampling_test)
+    #print(sampling_train)
+    
+def validacion_cruzada(row_count,k):
+    
+    id_list=list(range(row_count))
+    n, m = divmod(row_count, k)
+    
+    random.shuffle(id_list)
+    #print(id_list)
+    sampling=[]
+    chunks=[]
+    for i in range(k):
+        chunks.append(sorted(id_list[i*n+min(i,m):(i+1)*n+min(i+1,m)]))
+    #print(chunks)
+    
+    for i in range(k):
+        train=chunks.copy()
+        test=train.pop(i)
+        train1d=[]
+        for ch in train:
+            train1d+=ch
+        dict_tt={"Test":test,
+              "Train":sorted(train1d)}
+        sampling.append(dict_tt)
+
+
+        #sampling.append(validacion_simple(row_count,test_proportion))
+    return(sampling)
+
+'''
+Naive bayes module
 Input:
     dataset - needed to read the dataset atributes
     train - train data obtained by test_train
@@ -85,7 +132,6 @@ def naive_bayes(dataset, train, test_line, laplace):
                 std=prob_dada_clase[j][1,c_i]
                 p_contin=norm.pdf(atr_val, mu, std)
                 p_c_post=p_c_post*p_contin
-                print("Val: ", atr_val, "Mu ", mu, "Std ", std, "P(val)", p_contin)
             j+=1
         P_posteriori.append(p_c_post)
      
@@ -97,46 +143,42 @@ def naive_bayes(dataset, train, test_line, laplace):
     return(predicted_class, P_posteriori)    
 
     
+   
     
     
     
-    
-    
-    
-    
-    
-    
-    
-dataset=Datos('ConjuntosDatos/tic-tac-toe.data')
-#dataset=Datos('ConjuntosDatos/german.data')
+#dataset=Datos('ConjuntosDatos/tic-tac-toe.data')
+dataset=Datos('ConjuntosDatos/german.data')
 
 rows_number=dataset.datos.shape[0]
-test_proportion=0.3
+test_proportion=0.2
+
+'''
+#Cruzada
 line_ids=validacion_cruzada(rows_number,4)
 line_ids_test=line_ids[0]['Test']
 line_ids_train=line_ids[0]['Train']
+'''
+#Simple validation
+line_ids=validacion_simple(rows_number,test_proportion)
+line_ids_test=line_ids['Test']
+line_ids_train=line_ids['Train']
 
-
-#print("Test",line_ids_test)
-#print("Train",line_ids_train)
-#print(dataset.extraeDatos(line_ids_test))
-
-#print(dataset.nominalAtributos)
-#print(dataset.diccionario)
-
-#atr_val=["x","x","x","o","b","x","b","o","o"]
-
-#print(atr_val)
 
 
 
     
 laplace=True
 #test_line=["A14",24,"A32","A43",3430,"A63","A75",3,"A93","A101",2,"A123",31,"A143","A152",1,"A173",2,"A192","A201"]
-test_line=["x","x","x","o","b","x","b","o","o"]
+#test_line=["x","x","x","o","b","x","b","o","o"]
 
-train=dataset.extraeDatos(line_ids_test)
+train=dataset.extraeDatos(line_ids_train)
+test=dataset.extraeDatos(line_ids_test)
 
-class_name, P_classes = naive_bayes(dataset, train, test_line, laplace)
-print("Predicted class: ", class_name, "Probabilities for classes: ", P_classes)
-
+counter=0
+for test_line in test:
+    class_name, P_classes = naive_bayes(dataset, train, test_line[0:-1], laplace)
+    if class_name == test_line[-1]:
+        counter+=1
+    print("Predicted class: ", class_name, "Real class",test_line[-1], "Probabilities for classes: ", P_classes)
+print("Assert:", counter/len(test))

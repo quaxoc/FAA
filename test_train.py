@@ -51,14 +51,7 @@ def validacion_cruzada(row_count,k):
     return(sampling)
         
 
-row_count=21
-test_proportion=0.3
 
-'''
-print("Validacion simple")
-print(validacion_simple(row_count,test_proportion))
-k=4
-'''
 
 
 #print(validacion_cruzada(row_count,4))
