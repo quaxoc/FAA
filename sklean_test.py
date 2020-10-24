@@ -45,6 +45,7 @@ for r in range(len(classes_encoded)):
             confusion_matrix[0,0]+=1
         else: 
             confusion_matrix[0,1]+=1
+            print("Predicted", predicted, "True", classes_encoded[r])
     else:
         if classes_encoded[r]==0:
             confusion_matrix[1,1]+=1
@@ -52,3 +53,11 @@ for r in range(len(classes_encoded)):
             confusion_matrix[1,0]+=1
             
 print(confusion_matrix)
+tp=confusion_matrix[0,0]
+fn=confusion_matrix[1,0]
+fp=confusion_matrix[0,1]
+tn=confusion_matrix[1,1]
+
+tpr=tp/(tp+fn)
+fnr=fn/(tp+fn)
+fpr=fp/(fp+tn)
