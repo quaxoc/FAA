@@ -77,7 +77,7 @@ class Clasificador:
     elif(isinstance(particionado, ValidacionCruzada)):
       line_ids=particionado.creaParticiones(dataset)
       assert_cross=[]
-      for i in range(particionado.ngrupos): #puede necesitar casting
+      for i in range(particionado.ngrupos): 
         line_ids_test=line_ids[i].indicesTest
         line_ids_train=line_ids[i].indicesTrain
         train=dataset.extraeDatos(line_ids_train)
@@ -85,7 +85,7 @@ class Clasificador:
         counter=0
         for test_line in test:
           clasificador.entrenamiento(train, test_line[0:-1], dataset.diccionario)
-          class_name, P_classes = clasificador.clasifica(train, test_line[0:-1], dataset.diccionario)
+          class_name, P_classes = clasificador.clasifica(test, test_line[0:-1], dataset.diccionario)
           if class_name == test_line[-1]:
             counter+=1
         assert_cross.append(counter/len(test))
@@ -149,16 +149,18 @@ class ClasificadorNaiveBayes(Clasificador):
     #The list of atributes with ids
     atr=diccionario[:-1]
     
+    auxprob = np.asarray(self.prob_dada_clase)
     for c_i in range(len(classes)):
       j=0
       p_c_post=self.p_priori[c_i]
       for atr_val in datostest:
+        aux_atr = int(atr_val)
         if atributosDiscretos[j]:
-          p_c_post=p_c_post*self.prob_dada_clase[j][atr_val,c_i]
+          p_c_post=p_c_post*auxprob[j][aux_atr,c_i] #self.prob_dada_clase[j][atr_val,c_i]
         else:
-          mu=self.prob_dada_clase[j][0,c_i]
-          std=self.prob_dada_clase[j][1,c_i]
-          p_contin=norm.pdf(atr_val, mu, std)
+          mu=auxprob[j][0,c_i] #self.prob_dada_clase[j][0,c_i]
+          std=auxprob[j][1,c_i] #self.prob_dada_clase[j][1,c_i]
+          p_contin=norm.pdf(aux_atr, mu, std)
           p_c_post=p_c_post*p_contin
         j+=1
       self.P_posteriori.append(p_c_post)
