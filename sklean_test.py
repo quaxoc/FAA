@@ -10,7 +10,8 @@ from sklearn import preprocessing
 from datos import *
 from sklearn.naive_bayes import GaussianNB
 
-dataset=Datos('ConjuntosDatos/tic-tac-toe.data')
+#dataset=Datos('ConjuntosDatos/tic-tac-toe.data')
+dataset=Datos('ConjuntosDatos/german.data')
 data_table=dataset.datos
 le = preprocessing.LabelEncoder()
 
