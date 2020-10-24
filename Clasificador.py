@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import random 
 from scipy.stats import norm
+import estrategiaParticionado
 
 
 class Clasificador:
@@ -52,7 +53,41 @@ class Clasificador:
     # y obtenemos el error en la particion de test i
     # - Para validacion simple (hold-out): entrenamos el clasificador con la particion de train
     # y obtenemos el error en la particion test. Otra opción es repetir la validación simple un número especificado de veces, obteniendo en cada una un error. Finalmente se calcularía la media.
-	pass  
+    
+    particiones=particionado.creaParticiones(dataset) #datos es una lista de las filas de la tabla, cada fila siendo otra lista
+    if(isInstance(particionado, ValidacionSimple)):
+      line_ids=particionado.creaParticiones(dataset)
+      line_ids_test=line_ids[o.indicesTest for o in line_ids]
+      line_ids_train=line_ids[o.indicesTrain for o in line_ids]
+
+      train=dataset.extraeDatos(line_ids_train)
+      test=dataset.extraeDatos(line_ids_test)
+
+      counter=0
+      for test_line in test:
+        clasificador.entrenamiento(train, test_line[0:-1], dataset.diccionario) #no se si esto es correcto, atributosDiscretos?
+        class_name, P_classes = clasificador.clasifica(test, test_line[0:-1], dataset.diccionario)
+        if class_name == test_line[-1]:
+          counter+=1
+      assert_simple=counter/len(test)
+      return error(test, assert_simple) #no se si esto es correcto
+    else:
+      line_ids=particionado.creaParticiones(dataset)
+      assert_cross=[]
+      for i in range(particionado.ngrupos): #puede necesitar casting
+        line_ids_test=line_ids[i].indicesTest
+        line_ids_train=line_ids[i].indicesTrain
+        train=dataset.extraeDatos(line_ids_train)
+        test=dataset.extraeDatos(line_ids_test)
+        counter=0
+        for test_line in test:
+          clasificador.entrenamiento(train, test_line[0:-1], dataset.diccionario)
+          class_name, P_classes = clasificador.clasifica(train, test_line[0:-1], dataset.diccionario)
+          if class_name == test_line[-1]:
+            counter+=1
+        assert_cross.append(counter/len(test))
+      return error(test, assert_cross)
+	  
 
 ##############################################################################
 
@@ -75,7 +110,6 @@ class ClasificadorNaiveBayes(Clasificador):
     
     
     #An array with tables for each attribute that either contains probabilities or mean and std for non categorical values
-    #prob_dada_clase=[]
     a_id=0
     for a in atr:
         if atributosDiscretos[a_id]:
@@ -112,7 +146,6 @@ class ClasificadorNaiveBayes(Clasificador):
     #The list of atributes with ids
     atr=diccionario[:-1]
     
-    #P_posteriori=[]
     for c_i in range(len(classes)):
         j=0
         p_c_post=self.p_priori[c_i]
