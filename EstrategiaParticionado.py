@@ -27,7 +27,7 @@ class EstrategiaParticionado:
 
 class ValidacionSimple(EstrategiaParticionado):
 
-  def __init__(self, test_proportion, n_iters)
+  def __init__(self, test_proportion, n_iters):
     self.test_proportion=test_proportion
     self.n_iters = n_iters
   
@@ -50,7 +50,7 @@ class ValidacionSimple(EstrategiaParticionado):
 #####################################################################################################      
 class ValidacionCruzada(EstrategiaParticionado):
   
-  def __init__(self, ngrupos)
+  def __init__(self, ngrupos):
     self.ngrupos = ngrupos #numero de divisiones de los datos
   
   # Crea particiones segun el metodo de validacion cruzada.

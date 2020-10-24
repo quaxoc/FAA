@@ -146,12 +146,21 @@ def naive_bayes(dataset, train, test_line, laplace):
     
     #Return predicted class 
     predicted_class=list(classes.keys())[list(classes.values()).index(index_max)]
-    return(predicted_class, P_posteriori)    
+    #return(predicted_class, P_posteriori)
+    return(predicted_class)
 
     
-   
+def validacion(datostest,dataset,train, laplace):  
+    counter=0
+    for test_line in datostest:
+        class_name = naive_bayes(dataset, train, test_line[0:-1], laplace)
+        if class_name != test_line[-1]:
+            counter+=1
+    error=counter/len(test)
+    return(error)
     
-    
+
+
     
 #dataset=Datos('ConjuntosDatos/tic-tac-toe.data')
 dataset=Datos('ConjuntosDatos/german.data')
@@ -176,11 +185,11 @@ test=dataset.extraeDatos(line_ids_test)
 
 counter=0
 for test_line in test:
-    class_name, P_classes = naive_bayes(dataset, train, test_line[0:-1], laplace)
+    class_name = naive_bayes(dataset, train, test_line[0:-1], laplace)
     if class_name == test_line[-1]:
         counter+=1
 assert_simple=counter/len(test)
-print("Simple validation assert:", assert_simple)
+print("Simple validation assert:", validacion(test,dataset,train, laplace))
 
 
 #Cross validation
@@ -194,7 +203,7 @@ for i in range(partitions):
     test=dataset.extraeDatos(line_ids_test)
     counter=0
     for test_line in test:
-        class_name, P_classes = naive_bayes(dataset, train, test_line[0:-1], laplace)
+        class_name = naive_bayes(dataset, train, test_line[0:-1], laplace)
         if class_name == test_line[-1]:
             counter+=1
     assert_cross.append(counter/len(test))
