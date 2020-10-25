@@ -161,7 +161,7 @@ def validacion(datostest,dataset,train, laplace):
     
 
 
-    
+'''  
 #dataset=Datos('ConjuntosDatos/tic-tac-toe.data')
 dataset=Datos('ConjuntosDatos/german.data')
     
@@ -208,3 +208,4 @@ for i in range(partitions):
             counter+=1
     assert_cross.append(counter/len(test))
 print("Cross validation assert:", assert_cross)
+'''  
