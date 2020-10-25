@@ -1,11 +1,4 @@
-ï»¿from abc import ABCMeta,abstractmethod
-
-from datos import *
-import pandas as pd
-import numpy as np
-import random 
-from scipy.stats import norm
-from EstrategiaParticionado import *
+from abc import ABCMeta,abstractmethod
 
 
 class Clasificador:
@@ -32,16 +25,15 @@ class Clasificador:
   
   # Obtiene el numero de aciertos y errores para calcular la tasa de fallo
   # TODO: implementar
-  def error(self,datos,pred):
-    # Aqui se compara la prediccion (pred) con las clases reales y se calcula el error    
+  def error(self,datos,pred): #datos es el retorno de extraeDatos de los testIds, pred es una lista de retornos del metodo clasifica
+    counter=0
     i=0
-    ret=0.0
-    for elem in pred:
-      if elem == datos[i]:
-        ret+=1
+    for test_line in datos:
+      if pred[i] != test_line[-1]:
+        counter+=1
       i+=1
-    return ret/i
-	#pass
+    error=counter/len(datos) #aqui ponia len(test), no se de donde salia la variable test
+    return(error)
     
     
   # Realiza una clasificacion utilizando una estrategia de particionado determinada
@@ -52,57 +44,48 @@ class Clasificador:
     # - Para validacion cruzada: en el bucle hasta nv entrenamos el clasificador con la particion de train i
     # y obtenemos el error en la particion de test i
     # - Para validacion simple (hold-out): entrenamos el clasificador con la particion de train
-    # y obtenemos el error en la particion test. Otra opcion es repetir la validacion simple un numero especificado de veces, obteniendo en cada una un error. Finalmente se calcularia la media.
-    
-    particiones=particionado.creaParticiones(dataset) #datos es una lista de las filas de la tabla, cada fila siendo otra lista
-    if(isinstance(particionado, ValidacionSimple)):
-      line_ids=particionado.creaParticiones(dataset)
-      line_ids_test=[] #line_ids[o.indicesTest for o in line_ids]
-      line_ids_train=[] #line_ids[o.indicesTrain for o in line_ids]
-      for o in line_ids:
-        line_ids_test.append(o.indicesTest)
-        line_ids_train.append(o.indicesTrain)
-
-      train=dataset.extraeDatos(line_ids_train)
-      test=dataset.extraeDatos(line_ids_test)
-
-      counter=0
-      for test_line in test:
-        clasificador.entrenamiento(train, test_line[0:-1], dataset.diccionario) #no se si esto es correcto, atributosDiscretos?
-        class_name, P_classes = clasificador.clasifica(test, test_line[0:-1], dataset.diccionario)
-        if class_name == test_line[-1]:
-          counter+=1
-      assert_simple=counter/len(test)
-      return error(test, assert_simple)
-    elif(isinstance(particionado, ValidacionCruzada)):
-      line_ids=particionado.creaParticiones(dataset)
+    # y obtenemos el error en la particion test. Otra opción es repetir la validación simple un número especificado de veces, obteniendo en cada una un error. Finalmente se calcularía la media.
+	if(isinstance(particionado, ValidacionSimple)):
+      line_ids=particionado.creaParticiones(dataset.datos)
       assert_cross=[]
-      for i in range(particionado.ngrupos): 
+      for i in range(particionado.n_iters):
         line_ids_test=line_ids[i].indicesTest
         line_ids_train=line_ids[i].indicesTrain
         train=dataset.extraeDatos(line_ids_train)
         test=dataset.extraeDatos(line_ids_test)
-        counter=0
+        predictions=[]
         for test_line in test:
-          clasificador.entrenamiento(train, test_line[0:-1], dataset.diccionario)
-          class_name, P_classes = clasificador.clasifica(test, test_line[0:-1], dataset.diccionario)
-          if class_name == test_line[-1]:
-            counter+=1
-        assert_cross.append(counter/len(test))
-      return error(test, assert_cross)
-    else:
-      print("Unknown validation method")
+          clasificador.entrenamiento(train, dataset.nominalAtributos, dataset.diccionario)
+          predictions.append(clasificador.clasifica(test_line, dataset.nominalAtributos, dataset.diccionario))
+        assert_cross.append(error(test, predictions))
+      return np.mean(assert_cross)
+      
+    elif(isinstance(particionado, ValidacionCruzada):
+      line_ids=particionado.creaParticiones(dataset.datos)
+      assert_cross=[]
+      for i in range(particionado.ngrupos):
+        line_ids_test=line_ids[i].indicesTest
+        line_ids_train=line_ids[i].indicesTrain
+        train=dataset.extraeDatos(line_ids_train)
+        test=dataset.extraeDatos(line_ids_test)
+        predictions=[]
+        for test_line in test:
+          clasificador.entrenamiento(train, dataset.nominalAtributos, dataset.diccionario)
+          predictions.append(clasificador.clasifica(test_line, dataset.nominalAtributos, dataset.diccionario))
+        assert_cross.append(error(test, predictions))
+      return np.mean(assert_cross)
+
 
 ##############################################################################
 
 class ClasificadorNaiveBayes(Clasificador):
-  prob_dada_clase = []
-  P_posteriori = []
-  predicted_class = []
-  p_priori = []
+
+  def __init__(self):
+    self.prob_dada_clase=[]
+    self.p_priori=[]
 
   # TODO: implementar
-  def entrenamiento(self,datostrain,atributosDiscretos,diccionario):
+  def entrenamiento(self,datostrain,atributosDiscretos,diccionario): #datostrain es el retorno de extraeDatos de los ids de entrenamiento
     #The list of classes with ids
     classes=diccionario[-1]
     #The list of atributes with ids
@@ -112,8 +95,6 @@ class ClasificadorNaiveBayes(Clasificador):
     for c in classes:
         self.p_priori.append(np.sum(train_classes==c)/len(train_classes))
     
-    
-    #An array with tables for each attribute that either contains probabilities or mean and std for non categorical values
     a_id=0
     for a in atr:
       if atributosDiscretos[a_id]:
@@ -125,11 +106,11 @@ class ClasificadorNaiveBayes(Clasificador):
             p_table[j,i]=datostrain[np.where((datostrain[:,-1]==c) & (datostrain[:,a_id]==aval))].shape[0]
             j+=1
           i+=1
-          #aplicando Laplace
-          if (0 in p_table): # "and laplace" eliminado de la condicion
-            p_table=p_table+1
-          #Convirtiendo occuriencias en probabilidades
-          p_table/=np.sum(p_table, axis=0)
+        #aplicando Laplace
+        if (0 in p_table):
+          p_table=p_table+1
+        #Convirtiendo occuriencias en probabilidades
+        p_table/=np.sum(p_table, axis=0)
       else:   #Apply gaussian bayes
         p_table=np.empty([2, len(classes)])  #Each column of the table is a class, first row is mean and second is standard deviation of the data values
         i=0
@@ -139,35 +120,43 @@ class ClasificadorNaiveBayes(Clasificador):
           i+=1
       self.prob_dada_clase.append(p_table)
       a_id+=1
-    return self.prob_dada_clase
-  
-  
+    
+    
+    
   # TODO: implementar
-  def clasifica(self,datostest,atributosDiscretos,diccionario):
+  def clasifica(self,datostest,atributosDiscretos,diccionario): #datostest es un elemento del retorno de extraeDatos de los ids de test
     #The list of classes with ids
     classes=diccionario[-1]
     #The list of atributes with ids
     atr=diccionario[:-1]
     
-    auxprob = np.asarray(self.prob_dada_clase)
+    #Convert test line to ids using the dictionary
+    test_line_ids=[]
+    for k in range(len(datostest)):
+      if atributosDiscretos[k]:
+        test_line_ids.append((atr[k][datostest[k]]))
+      else:
+        test_line_ids.append(datostest[k])
+    
+    P_posteriori=[]
     for c_i in range(len(classes)):
       j=0
       p_c_post=self.p_priori[c_i]
-      for atr_val in datostest:
-        aux_atr = int(atr_val)
+      for atr_val in test_line_ids:
         if atributosDiscretos[j]:
-          p_c_post=p_c_post*auxprob[j][aux_atr,c_i] #self.prob_dada_clase[j][atr_val,c_i]
+          p_c_post=p_c_post*self.prob_dada_clase[j][atr_val,c_i]
         else:
-          mu=auxprob[j][0,c_i] #self.prob_dada_clase[j][0,c_i]
-          std=auxprob[j][1,c_i] #self.prob_dada_clase[j][1,c_i]
-          p_contin=norm.pdf(aux_atr, mu, std)
+          mu=self.prob_dada_clase[j][0,c_i]
+          std=self.prob_dada_clase[j][1,c_i]
+          p_contin=norm.pdf(atr_val, mu, std)
           p_c_post=p_c_post*p_contin
         j+=1
-      self.P_posteriori.append(p_c_post)
+      P_posteriori.append(p_c_post)
      
-    self.P_posteriori=self.P_posteriori/np.sum(self.P_posteriori)    
-    index_max = np.argmax(self.P_posteriori)
+    P_posteriori=P_posteriori/np.sum(P_posteriori)    
+    index_max = np.argmax(P_posteriori)
     
     #Return predicted class 
-    self.predicted_class=list(classes.keys())[list(classes.values()).index(index_max)]
-    return(self.predicted_class, self.P_posteriori)
+    predicted_class=list(classes.keys())[list(classes.values()).index(index_max)]
+    #return(predicted_class, P_posteriori)
+    return(predicted_class)
