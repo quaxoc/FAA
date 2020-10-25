@@ -1,9 +1,10 @@
-from abc import ABCMeta,abstractmethod
+ï»¿from abc import ABCMeta,abstractmethod
+import random
 
 
 class Particion():
 
-  # Esta clase mantiene la lista de índices de Train y Test para cada partición del conjunto de particiones  
+  # Esta clase mantiene la lista de indices de Train y Test para cada particion del conjunto de particiones  
   def __init__(self):
     self.indicesTrain=[]
     self.indicesTest=[]
@@ -31,7 +32,7 @@ class ValidacionSimple(EstrategiaParticionado):
     self.test_proportion=test_proportion
     self.n_iters = n_iters
   
-  # Crea particiones segun el metodo tradicional de division de los datos segun el porcentaje deseado y el número de ejecuciones deseado
+  # Crea particiones segun el metodo tradicional de division de los datos segun el porcentaje deseado y el numero de ejecuciones deseado
   # Devuelve una lista de particiones (clase Particion)
   # TODO: implementar
   def creaParticiones(self,datos,seed=None): #datos ha de venir de dataset.datos

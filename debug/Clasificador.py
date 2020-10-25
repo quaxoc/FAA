@@ -1,4 +1,6 @@
-from abc import ABCMeta,abstractmethod
+ï»¿from abc import ABCMeta,abstractmethod
+from EstrategiaParticionado import *
+import numpy as np
 
 
 class Clasificador:
@@ -44,8 +46,8 @@ class Clasificador:
     # - Para validacion cruzada: en el bucle hasta nv entrenamos el clasificador con la particion de train i
     # y obtenemos el error en la particion de test i
     # - Para validacion simple (hold-out): entrenamos el clasificador con la particion de train
-    # y obtenemos el error en la particion test. Otra opción es repetir la validación simple un número especificado de veces, obteniendo en cada una un error. Finalmente se calcularía la media.
-	if(isinstance(particionado, ValidacionSimple)):
+    # y obtenemos el error en la particion test. Otra opcion es repetir la validacion simple un numero especificado de veces, obteniendo en cada una un error. Finalmente se calcularia la media.
+    if isinstance(particionado, ValidacionSimple):
       line_ids=particionado.creaParticiones(dataset.datos)
       assert_cross=[]
       for i in range(particionado.n_iters):
@@ -56,11 +58,11 @@ class Clasificador:
         predictions=[]
         for test_line in test:
           clasificador.entrenamiento(train, dataset.nominalAtributos, dataset.diccionario)
-          predictions.append(clasificador.clasifica(test_line, dataset.nominalAtributos, dataset.diccionario))
+          predictions.append(clasificador.clasifica(test_line[0:-1], dataset.nominalAtributos, dataset.diccionario))
         assert_cross.append(error(test, predictions))
       return np.mean(assert_cross)
       
-    elif(isinstance(particionado, ValidacionCruzada):
+    elif isinstance(particionado, ValidacionCruzada):
       line_ids=particionado.creaParticiones(dataset.datos)
       assert_cross=[]
       for i in range(particionado.ngrupos):
