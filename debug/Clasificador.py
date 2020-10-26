@@ -1,6 +1,7 @@
 ﻿from abc import ABCMeta,abstractmethod
 from EstrategiaParticionado import *
 import numpy as np
+from scipy.stats import norm
 
 
 class Clasificador:
@@ -82,9 +83,10 @@ class Clasificador:
 
 class ClasificadorNaiveBayes(Clasificador):
 
-  def __init__(self):
+  def __init__(self, laplace):
     self.prob_dada_clase=[]
     self.p_priori=[]
+    self.laplace=laplace
 
   # TODO: implementar
   def entrenamiento(self,datostrain,atributosDiscretos,diccionario): #datostrain es el retorno de extraeDatos de los ids de entrenamiento
@@ -109,7 +111,7 @@ class ClasificadorNaiveBayes(Clasificador):
             j+=1
           i+=1
         #aplicando Laplace
-        if (0 in p_table):
+        if (0 in p_table and self.laplace):
           p_table=p_table+1
         #Convirtiendo occuriencias en probabilidades
         p_table/=np.sum(p_table, axis=0)
