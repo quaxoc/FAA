@@ -59,7 +59,7 @@ class Clasificador:
         for test_line in test:
           clasificador.entrenamiento(train, dataset.nominalAtributos, dataset.diccionario)
           predictions.append(clasificador.clasifica(test_line[0:-1], dataset.nominalAtributos, dataset.diccionario))
-        assert_cross.append(error(test, predictions))
+        assert_cross.append(clasificador.error(test, predictions))
       return np.mean(assert_cross)
       
     elif isinstance(particionado, ValidacionCruzada):
@@ -73,8 +73,8 @@ class Clasificador:
         predictions=[]
         for test_line in test:
           clasificador.entrenamiento(train, dataset.nominalAtributos, dataset.diccionario)
-          predictions.append(clasificador.clasifica(test_line, dataset.nominalAtributos, dataset.diccionario))
-        assert_cross.append(error(test, predictions))
+          predictions.append(clasificador.clasifica(test_line[0:-1], dataset.nominalAtributos, dataset.diccionario))
+        assert_cross.append(clasificador.error(test, predictions))
       return np.mean(assert_cross)
 
 
