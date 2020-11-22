@@ -56,11 +56,11 @@ class Clasificador:
         line_ids_train=line_ids[i].indicesTrain
         train=dataset.extraeDatos(line_ids_train)
         test=dataset.extraeDatos(line_ids_test)
-        predictions=[]
+        self.predictions=[]
         for test_line in test:
           clasificador.entrenamiento(train, dataset.nominalAtributos, dataset.diccionario)
-          predictions.append(clasificador.clasifica(test_line[0:-1], dataset.nominalAtributos, dataset.diccionario))
-        assert_cross.append(clasificador.error(test, predictions))
+          self.predictions.append(clasificador.clasifica(test_line[0:-1], dataset.nominalAtributos, dataset.diccionario))
+        assert_cross.append(clasificador.error(test, self.predictions))
       ret=[]
       ret.append(np.mean(assert_cross))
       ret.append(np.std(assert_cross))
@@ -77,8 +77,8 @@ class Clasificador:
         predictions=[]
         for test_line in test:
           clasificador.entrenamiento(train, dataset.nominalAtributos, dataset.diccionario)
-          predictions.append(clasificador.clasifica(test_line[0:-1], dataset.nominalAtributos, dataset.diccionario))
-        assert_cross.append(clasificador.error(test, predictions))
+          self.predictions.append(clasificador.clasifica(test_line[0:-1], dataset.nominalAtributos, dataset.diccionario))
+        assert_cross.append(clasificador.error(test, self.predictions))
       ret=[]
       ret.append(np.mean(assert_cross))
       ret.append(np.std(assert_cross))
@@ -220,6 +220,7 @@ class ClasificadorNaiveBayes(Clasificador):
   def __init__(self, laplace):
     self.prob_dada_clase=[]
     self.p_priori=[]
+    self.probs=[]
     self.laplace=laplace
 
   # TODO: implementar
@@ -294,13 +295,13 @@ class ClasificadorNaiveBayes(Clasificador):
     P_posteriori=P_posteriori/np.sum(P_posteriori)    
     index_max = np.argmax(P_posteriori)
     #added to obtain probability of selected class
-    self.prob = P_posteriori[index_max]
+    self.probs.append(P_posteriori[index_max])
     
     #Return predicted class 
     predicted_class=list(classes.keys())[list(classes.values()).index(index_max)]
     #return(predicted_class, P_posteriori)
     return(predicted_class)
     
-    def probability(self):
-      return self.prob
+  def probability(self):
+    return self.probs
     
