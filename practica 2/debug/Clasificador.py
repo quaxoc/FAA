@@ -87,10 +87,10 @@ class Clasificador:
 
 ##############################################################################
 class ClasificadorVecinosProximos(Clasificador):
-  def __init__(self,classes,k,dist_type):
+  def __init__(self,k,dist_type):
     #self.train=train_set.copy(deep=True)
-    self.classes=classes.values
-    self.class_names=np.unique(self.classes)
+    #self.classes=classes.values              #classes=diccionario
+    #self.class_names=np.unique(self.classes)
     self.k=k
     self.dist_type=dist_type
     self.dists=[]
@@ -146,10 +146,6 @@ class ClasificadorVecinosProximos(Clasificador):
   def entrenamiento(self,datostrain,atributosDiscretos,diccionario): #datostrain es el retorno de extraeDatos de los ids de entrenamiento
     self.train=datostrain.copy(deep=True)
   
-  def kneignour_class(self):
-    idx = np.argpartition(self.dist, self.k)
-    idx=idx[0:self.k]
-    return mode(self.classes[idx])
   def clasifica(self,datostest,atributosDiscretos,diccionario): #datostest es un elemento del retorno de extraeDatos de los ids de test
     predicted_class=[]
     if self.dist_type=="manhatten":
@@ -157,21 +153,67 @@ class ClasificadorVecinosProximos(Clasificador):
         dist=self.manhatten_distance(x)
         idx = np.argpartition(dist, self.k)
         idx=idx[0:self.k]
-        predicted_class.append(mode(self.classes[idx]))
+        predicted_class.append(mode(diccionario[idx]))
     elif self.dist_type=="mahalanobis":
       for x in datostest:
         dist=self.mahalanobis_distance(x)
         idx = np.argpartition(dist, self.k)
         idx=idx[0:self.k]
-        predicted_class.append(mode(self.classes[idx]))
+        predicted_class.append(mode(diccionario[idx]))
     elif self.dist_type=="euclidian":
       for x in datostest:
         dist=self.euclidian_distance(x)
         idx = np.argpartition(dist, self.k)
         idx=idx[0:self.k]
-        predicted_class.append(mode(self.classes[idx]))
+        predicted_class.append(mode(diccionario[idx]))
+    values, counts = np.unique(diccionario[idx], return_counts=True)
+    self.prob=np.max(counts)/self.k
     return(predicted_class)
+    
+    def probability(self): #estas funciones son llamadas tras clasificar
+      return self.prob
   
+class ClasificadorRegresionLogistica(Clasificador):
+  def __init__(self, rounds, eta):
+    #self.train_set=train_set  #datostrain=train_set
+    #self.classes=classes      #diccionario=classes
+    #self.class_names=np.unique(self.classes)
+    self.rounds=rounds
+    self.eta=eta
+  
+  def entrenamiento(self,datostrain,atributosDiscretos,diccionario):
+    self.w=np.zeros(datostrain.shape[1]+1)+0.5
+    self.class_names=np.unique(diccionario)
+    self.class1=self.class_names[0]
+    for r in range(self.rounds):
+      #for i in range(self.train_set.shape[0]):
+      for i, row in datostrain.iterrows():
+        #x=np.array(self.train_set.iloc[i].values)
+        x=np.array(row.values)
+        x=np.insert(x,0,1)
+        x=np.transpose(x)
+        if self.classes[i]==self.class1:
+          t=1
+        else:
+          t=0
+        wx=np.dot(self.w,x)
+        self.w=self.w-self.eta*(1/(1+np.exp(-wx))-t)*x
+    return(self.w)
+  
+  def clasifica(self,datostest,atributosDiscretos,diccionario):
+    datostest=np.array(datostest)
+    datostest=np.insert(datostest,0,1)
+    datostest=np.transpose(datostest)
+    self.wx=np.dot(self.w,datostest)
+    if self.wx>=0:
+      return self.class1
+    else:
+      return self.class_names[1]
+  
+  def probability(self):
+    p=1/(1+np.exp(-self.wx))
+    return p
+
 
 class ClasificadorNaiveBayes(Clasificador):
 
@@ -251,8 +293,14 @@ class ClasificadorNaiveBayes(Clasificador):
      
     P_posteriori=P_posteriori/np.sum(P_posteriori)    
     index_max = np.argmax(P_posteriori)
+    #added to obtain probability of selected class
+    self.prob = P_posteriori[index_max]
     
     #Return predicted class 
     predicted_class=list(classes.keys())[list(classes.values()).index(index_max)]
     #return(predicted_class, P_posteriori)
     return(predicted_class)
+    
+    def probability(self):
+      return self.prob
+    
