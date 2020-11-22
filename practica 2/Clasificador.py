@@ -165,8 +165,12 @@ class ClasificadorNaiveBayes(Clasificador):
      
     P_posteriori=P_posteriori/np.sum(P_posteriori)    
     index_max = np.argmax(P_posteriori)
+    self.prob=P_posteriori[index_max]
     
     #Return predicted class 
     predicted_class=list(classes.keys())[list(classes.values()).index(index_max)]
     #return(predicted_class, P_posteriori)
     return(predicted_class)
+  def probability(self,datostest,atributosDiscretos,diccionario):
+    self.clasifica(datostest,atributosDiscretos,diccionario)
+    return(self.prob)
