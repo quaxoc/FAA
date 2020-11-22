@@ -48,6 +48,7 @@ class Clasificador:
     # y obtenemos el error en la particion de test i
     # - Para validacion simple (hold-out): entrenamos el clasificador con la particion de train
     # y obtenemos el error en la particion test. Otra opcion es repetir la validacion simple un numero especificado de veces, obteniendo en cada una un error. Finalmente se calcularia la media.
+    self.predictions=[]
     if isinstance(particionado, ValidacionSimple):
       line_ids=particionado.creaParticiones(dataset.datos)
       assert_cross=[]
@@ -56,7 +57,6 @@ class Clasificador:
         line_ids_train=line_ids[i].indicesTrain
         train=dataset.extraeDatos(line_ids_train)
         test=dataset.extraeDatos(line_ids_test)
-        self.predictions=[]
         for test_line in test:
           clasificador.entrenamiento(train, dataset.nominalAtributos, dataset.diccionario)
           self.predictions.append(clasificador.clasifica(test_line[0:-1], dataset.nominalAtributos, dataset.diccionario))
@@ -74,7 +74,6 @@ class Clasificador:
         line_ids_train=line_ids[i].indicesTrain
         train=dataset.extraeDatos(line_ids_train)
         test=dataset.extraeDatos(line_ids_test)
-        predictions=[]
         for test_line in test:
           clasificador.entrenamiento(train, dataset.nominalAtributos, dataset.diccionario)
           self.predictions.append(clasificador.clasifica(test_line[0:-1], dataset.nominalAtributos, dataset.diccionario))
