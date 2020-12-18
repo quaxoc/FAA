@@ -15,7 +15,7 @@ class Datos:
 
     data_tic = pd.read_csv(filename)
     #Array of column names
-    self.column_names=list(data_tic.columns)
+    column_names=list(data_tic.columns)
     #Converting data from panda dataframe to numpy array
     self.datos=data_tic.to_numpy()
 
